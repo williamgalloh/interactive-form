@@ -10,11 +10,12 @@ document.getElementById('other-job-role').style.visibility = "hidden";
 // Disable color dropdown on load
 document.getElementById('color').setAttribute('disabled', true);
 
-// Select credit card as payment option and hide other payment sections on load
+// Select credit card as payment option on load
 select_payment_option('credit-card');
 
 function select_payment_option(selected_option) {
 	const payment_options = document.querySelectorAll('.payment-option');
+
 	for (let payment_option of payment_options) {
 		if(payment_option.dataset.method === selected_option) {
 			payment_option.style.display = "block";
@@ -26,6 +27,58 @@ function select_payment_option(selected_option) {
 	document.getElementById('payment').value = selected_option;
 }
 
+function isFieldEmpty(field) {
+	let regex = /^\s+$/;
+
+	return (regex.test(field.value) || field.value == "");
+}
+
+function isValidName() {
+	let field = document.getElementById('name');
+	return !isFieldEmpty(field);
+}
+
+function isValidEmail() {
+	let field = document.getElementById('email');
+	let regex = /[\w]+@[\w]+\.com/i;
+
+	if(!regex.test(field.value)) {
+		return false;
+	}
+
+	return true;
+}
+
+function isValidActivities() {
+	let selected_activities = document.querySelectorAll('#activities input[type="checkbox"]:checked');
+
+	if(selected_activities.length === 0) {
+		return false;
+	} 
+
+	return true;
+}
+
+function isValidPayment() {
+	let field = document.getElementById('payment');
+
+	if(field.value === 'credit-card') {
+		let card_number = document.getElementById('cc-num');
+		let card_number_regex = /[0-9]{13,16}/;
+
+		let zipcode = document.getElementById('zip');
+		let zipcode_regex = /[0-9]{5}/;
+
+		let cvv = document.getElementById('cvv');
+		let cvv_regex = /[0-9]{3}/;
+
+		if(!card_number_regex.test(card_number.value) || !zipcode_regex.test(zipcode.value) || !cvv_regex.test(cvv.value)) {
+			return false;
+		}
+	}
+
+	return true;
+}
 
 // Toggle other job input visibility based on job role value
 document.getElementById('title').addEventListener('change', () => { 
@@ -75,5 +128,12 @@ document.getElementById('activities').addEventListener('change', e => {
 // Handle payment option change event
 document.getElementById('payment').addEventListener('change', e => {
 	select_payment_option(e.target.value);
+});
+
+// Handle form submission event
+document.querySelector('form').addEventListener('submit', e => {
+	if(!isValidName() || !isValidEmail() || !isValidActivities() || !isValidPayment()) {
+		e.preventDefault();
+	}
 });
 
