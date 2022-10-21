@@ -38,9 +38,11 @@ function toggleFieldValidClass(field, valid) {
 	if(valid) {
 		parent.classList.remove("not-valid");
 		parent.classList.add("valid");
+		parent.lastElementChild.style.display = "none";
 	} else {
 		parent.classList.remove("valid");
 		parent.classList.add("not-valid");
+		parent.lastElementChild.style.display = "block";
 	}
 }
 
