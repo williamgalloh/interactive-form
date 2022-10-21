@@ -10,6 +10,23 @@ document.getElementById('other-job-role').style.visibility = "hidden";
 // Disable color dropdown on load
 document.getElementById('color').setAttribute('disabled', true);
 
+// Select credit card as payment option and hide other payment sections on load
+select_payment_option('credit-card');
+
+function select_payment_option(selected_option) {
+	const payment_options = document.querySelectorAll('.payment-option');
+	for (let payment_option of payment_options) {
+		if(payment_option.dataset.method === selected_option) {
+			payment_option.style.display = "block";
+		} else {
+			payment_option.style.display = "none";
+		}
+	}
+
+	document.getElementById('payment').value = selected_option;
+}
+
+
 // Toggle other job input visibility based on job role value
 document.getElementById('title').addEventListener('change', () => { 
 	const title = document.getElementById('title').value;
@@ -54,3 +71,9 @@ document.getElementById('activities').addEventListener('change', e => {
 		document.getElementById('activities-cost').innerHTML = `Total: $${total}`;
 	}
 });
+
+// Handle payment option change event
+document.getElementById('payment').addEventListener('change', e => {
+	select_payment_option(e.target.value);
+});
+
