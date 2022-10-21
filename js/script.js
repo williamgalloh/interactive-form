@@ -1,3 +1,6 @@
+// Initialize total variable to keep track of total cost
+let total = 0;
+
 // Focus name input on load
 document.getElementById('name').focus();
 
@@ -32,7 +35,22 @@ document.getElementById('design').addEventListener('change', () => {
 		}
 	}
 
-	document.getElementById('color').removeAttribute('disabled');
-	
+	document.getElementById('color').removeAttribute('disabled');	
 });
 
+// Update total based on user selection
+document.getElementById('activities').addEventListener('change', e => {
+	// Detect only for checkbox
+	if(e.target.tagName === "INPUT" && e.target.getAttribute('type') === "checkbox") {
+		const checkbox = e.target;
+		const cost = parseFloat(checkbox.dataset.cost);
+
+		if(checkbox.checked) {
+			total += cost;
+		} else {
+			total -= cost;
+		}
+
+		document.getElementById('activities-cost').innerHTML = `Total: $${total}`;
+	}
+});
