@@ -33,30 +33,43 @@ function isFieldEmpty(field) {
 	return (regex.test(field.value) || field.value == "");
 }
 
+function toggleFieldValidClass(field, valid) {
+	let parent = field.parentElement;
+	if(valid) {
+		parent.classList.remove("not-valid");
+		parent.classList.add("valid");
+	} else {
+		parent.classList.remove("valid");
+		parent.classList.add("not-valid");
+	}
+}
+
 function isValidName() {
 	let field = document.getElementById('name');
-	return !isFieldEmpty(field);
+	
+	let isValid = !isFieldEmpty(field);
+
+	toggleFieldValidClass(field, isValid);
+	return isValid;
 }
 
 function isValidEmail() {
 	let field = document.getElementById('email');
 	let regex = /[\w]+@[\w]+\.com/i;
 
-	if(!regex.test(field.value)) {
-		return false;
-	}
+	let isValid = regex.test(field.value);
 
-	return true;
+	toggleFieldValidClass(field, isValid);
+	return isValid;
 }
 
 function isValidActivities() {
 	let selected_activities = document.querySelectorAll('#activities input[type="checkbox"]:checked');
+	let field = document.getElementById('activities-box');
+	let isValid = selected_activities.length > 0;
 
-	if(selected_activities.length === 0) {
-		return false;
-	} 
-
-	return true;
+	toggleFieldValidClass(field, isValid);
+	return isValid;
 }
 
 function isValidPayment() {
@@ -64,20 +77,40 @@ function isValidPayment() {
 
 	if(field.value === 'credit-card') {
 		let card_number = document.getElementById('cc-num');
-		let card_number_regex = /[0-9]{13,16}/;
+		let card_number_regex = /^[0-9]{13,16}$/;
 
 		let zipcode = document.getElementById('zip');
-		let zipcode_regex = /[0-9]{5}/;
+		let zipcode_regex = /^[0-9]{5}$/;
 
 		let cvv = document.getElementById('cvv');
-		let cvv_regex = /[0-9]{3}/;
+		let cvv_regex = /^[0-9]{3}$/;
 
-		if(!card_number_regex.test(card_number.value) || !zipcode_regex.test(zipcode.value) || !cvv_regex.test(cvv.value)) {
-			return false;
-		}
+		let isCreditCardNumberValid = card_number_regex.test(card_number.value);
+		toggleFieldValidClass(card_number, isCreditCardNumberValid);
+
+		let isZipcodeValid = zipcode_regex.test(zipcode.value);
+		toggleFieldValidClass(zipcode, isZipcodeValid);
+
+		let isCvvValid = cvv_regex.test(cvv.value);
+		toggleFieldValidClass(cvv, isCvvValid);
+		
+		return isCreditCardNumberValid && isZipcodeValid && isCvvValid;
 	}
 
 	return true;
+}
+
+function toggleActivitiesFocusClass(e) {
+	if(e.target.tagName === "INPUT" && e.target.getAttribute('type') === "checkbox") {
+		const checkbox = e.target;
+		const label = checkbox.parentElement;
+
+		if(e.type === "focus") {
+			label.classList.add("focus");
+		} else if(e.type === "blur") {
+			label.classList.remove("focus");
+		}
+	}
 }
 
 // Toggle other job input visibility based on job role value
@@ -132,8 +165,25 @@ document.getElementById('payment').addEventListener('change', e => {
 
 // Handle form submission event
 document.querySelector('form').addEventListener('submit', e => {
-	if(!isValidName() || !isValidEmail() || !isValidActivities() || !isValidPayment()) {
+	let is_valid_name = isValidName();
+	let is_valid_email = isValidEmail();
+	let is_valid_activities = isValidActivities();
+	let is_valid_payment = isValidPayment();
+	if(!is_valid_name || !is_valid_email || !is_valid_activities || !is_valid_payment) {
 		e.preventDefault();
 	}
 });
+
+// Add focus class to activities on focus
+let activities = document.querySelectorAll('#activities input[type="checkbox"]');
+
+for (let activity of activities) {
+	activity.addEventListener('focus', e => {
+		toggleActivitiesFocusClass(e);
+	});
+
+	activity.addEventListener('blur', e => {
+		toggleActivitiesFocusClass(e);
+	});
+}
 
