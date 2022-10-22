@@ -27,10 +27,74 @@ function select_payment_option(selected_option) {
 	document.getElementById('payment').value = selected_option;
 }
 
-function isFieldEmpty(field) {
+function isEmpty(field) {
 	let regex = /^\s+$/;
 
 	return (regex.test(field.value) || field.value == "");
+}
+
+function isEmail(field) {
+	let regex = /[\w]+@[\w]+\.com/i;
+
+	return regex.test(field.value);
+}
+
+function activitySelected(field) {
+	// let field = document.getElementById('activities-box');
+	let selected_activities = document.querySelectorAll('#activities input[type="checkbox"]:checked');
+
+	return selected_activities.length > 0;
+}
+
+function isValidCreditCardNumber(field) {
+		let card_number_regex = /^[0-9]{13,16}$/;
+
+		return card_number_regex.test(field.value);
+}
+
+function isValidCreditCardZipcode(field) {
+		let zipcode_regex = /^[0-9]{5}$/;
+
+		return zipcode_regex.test(field.value);
+}
+
+function isValidCreditCardCvv(field) {
+		let cvv_regex = /^[0-9]{3}$/;
+
+		return cvv_regex.test(field.value);
+}
+
+function validateField(field, validation) {
+	let isValid = false;
+
+	switch(validation) {
+		case "not_empty":
+			isValid = !isEmpty(field);
+			break;
+
+		case "email":
+			isValid = isEmail(field);
+			break;
+
+		case "activity_selected":
+			isValid = activitySelected(field);
+			break;
+
+		case "credit_card_number":
+			isValid = isValidCreditCardNumber(field);
+			break;
+
+		case "credit_card_zipcode":
+			isValid = isValidCreditCardZipcode(field);
+			break;
+
+		case "credit_card_cvv":
+			isValid = isValidCreditCardCvv(field);
+			break;
+	}
+
+	toggleFieldValidClass(field, isValid);
+	return isValid;
 }
 
 function toggleFieldValidClass(field, valid) {
@@ -46,61 +110,6 @@ function toggleFieldValidClass(field, valid) {
 	}
 }
 
-function isValidName() {
-	let field = document.getElementById('name');
-	
-	let isValid = !isFieldEmpty(field);
-
-	toggleFieldValidClass(field, isValid);
-	return isValid;
-}
-
-function isValidEmail() {
-	let field = document.getElementById('email');
-	let regex = /[\w]+@[\w]+\.com/i;
-
-	let isValid = regex.test(field.value);
-
-	toggleFieldValidClass(field, isValid);
-	return isValid;
-}
-
-function isValidActivities() {
-	let selected_activities = document.querySelectorAll('#activities input[type="checkbox"]:checked');
-	let field = document.getElementById('activities-box');
-	let isValid = selected_activities.length > 0;
-
-	toggleFieldValidClass(field, isValid);
-	return isValid;
-}
-
-function isValidPayment() {
-	let field = document.getElementById('payment');
-
-	if(field.value === 'credit-card') {
-		let card_number = document.getElementById('cc-num');
-		let card_number_regex = /^[0-9]{13,16}$/;
-
-		let zipcode = document.getElementById('zip');
-		let zipcode_regex = /^[0-9]{5}$/;
-
-		let cvv = document.getElementById('cvv');
-		let cvv_regex = /^[0-9]{3}$/;
-
-		let isCreditCardNumberValid = card_number_regex.test(card_number.value);
-		toggleFieldValidClass(card_number, isCreditCardNumberValid);
-
-		let isZipcodeValid = zipcode_regex.test(zipcode.value);
-		toggleFieldValidClass(zipcode, isZipcodeValid);
-
-		let isCvvValid = cvv_regex.test(cvv.value);
-		toggleFieldValidClass(cvv, isCvvValid);
-		
-		return isCreditCardNumberValid && isZipcodeValid && isCvvValid;
-	}
-
-	return true;
-}
 
 function toggleActivitiesFocusClass(e) {
 	if(e.target.tagName === "INPUT" && e.target.getAttribute('type') === "checkbox") {
@@ -133,14 +142,21 @@ document.getElementById('design').addEventListener('change', () => {
 	for (let color of colors) {
 		let color_design = color.dataset.theme;
 
-		if(color_design !== selected_design) {
+		if(color_design !== selected_design && color !== colors[0]) {
 			color.setAttribute('hidden', true);
 		} else {
 			color.removeAttribute('hidden');
 		}
 	}
 
+	document.getElementById('color').value = "";
 	document.getElementById('color').removeAttribute('disabled');	
+});
+
+// Toggle color dropdown availability based on design dropdown
+document.getElementById('color').addEventListener('change', () => {
+	// Hide place holder option in design dropdown after first change
+	document.querySelector('#color option:first-child').setAttribute('hidden', true);
 });
 
 // Update total based on user selection
@@ -167,18 +183,31 @@ document.getElementById('payment').addEventListener('change', e => {
 
 // Handle form submission event
 document.querySelector('form').addEventListener('submit', e => {
-	let is_valid_name = isValidName();
-	let is_valid_email = isValidEmail();
-	let is_valid_activities = isValidActivities();
-	let is_valid_payment = isValidPayment();
-	if(!is_valid_name || !is_valid_email || !is_valid_activities || !is_valid_payment) {
+	let validateFields = [
+		{'field': 'name', 'validation': 'not_empty'},
+		{'field': 'email', 'validation': 'email'},
+		{'field': 'activities-box', 'validation': 'activity_selected'},
+		{'field': 'cc-num', 'validation': 'credit_card_number'},
+		{'field': 'zip', 'validation': 'credit_card_zipcode'},
+		{'field': 'cvv', 'validation': 'credit_card_cvv'}
+	];
+
+	let isValidForm = true;
+
+	for(let validateField of validateFields) {
+		let field = document.getElementById(validateField.field); 
+		if(!validateField(field, validateField.validation)) {
+			isValidForm = false;
+		}
+	}
+
+	if(isValidForm) {
 		e.preventDefault();
 	}
 });
 
 // Add focus class to activities on focus
 let activities = document.querySelectorAll('#activities input[type="checkbox"]');
-
 for (let activity of activities) {
 	activity.addEventListener('focus', e => {
 		toggleActivitiesFocusClass(e);
