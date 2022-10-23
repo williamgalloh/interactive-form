@@ -64,7 +64,7 @@ function isValidCreditCardCvv(field) {
 		return cvv_regex.test(field.value);
 }
 
-function validateField(field, validation) {
+let validateField = (field, validation) => {
 	let isValid = false;
 
 	switch(validation) {
@@ -233,25 +233,16 @@ document.getElementById('payment').addEventListener('change', e => {
 
 // Handle form submission event
 document.querySelector('form').addEventListener('submit', e => {
-	let validateFields = [
-		{'field': 'name', 'validation': 'not_empty'},
-		{'field': 'email', 'validation': 'email'},
-		{'field': 'activities-box', 'validation': 'activity_selected'},
-		{'field': 'cc-num', 'validation': 'credit_card_number'},
-		{'field': 'zip', 'validation': 'credit_card_zipcode'},
-		{'field': 'cvv', 'validation': 'credit_card_cvv'}
-	];
-
 	let isValidForm = true;
 
-	for(let validateField of validateFields) {
-		let field = document.getElementById(validateField.field); 
-		if(!validateField(field, validateField.validation)) {
+	for(let fieldToValidate of fieldsToValidate) {
+		let field = document.getElementById(fieldToValidate.field); 
+		if(!validateField(field, fieldToValidate.validation)) {
 			isValidForm = false;
 		}
 	}
 
-	if(isValidForm) {
+	if(!isValidForm) {
 		e.preventDefault();
 	}
 });
