@@ -1,6 +1,15 @@
 // Initialize total variable to keep track of total cost
 let total = 0;
 
+let fieldsToValidate = [
+	{'field': 'name', 'validation': 'not_empty'},
+	{'field': 'email', 'validation': 'email'},
+	{'field': 'activities-box', 'validation': 'activity_selected'},
+	{'field': 'cc-num', 'validation': 'credit_card_number'},
+	{'field': 'zip', 'validation': 'credit_card_zipcode'},
+	{'field': 'cvv', 'validation': 'credit_card_cvv'}
+];
+
 // Focus name input on load
 document.getElementById('name').focus();
 
@@ -223,6 +232,8 @@ document.getElementById('activities').addEventListener('change', e => {
 		let checkbox = e.target;
 		toggleConflictingActivities(checkbox);
 		updateTotal(checkbox);
+		let activitiesBox = document.getElementById('activities-box');
+		validateField(activitiesBox, 'activity_selected');
 	}
 });
 
@@ -246,6 +257,18 @@ document.querySelector('form').addEventListener('submit', e => {
 		e.preventDefault();
 	}
 });
+
+// Validate form fields in real-time
+for (let fieldToValidate of fieldsToValidate) {
+	// Skip activities as they are already being validated in real time on another event listener
+	if(fieldToValidate.field == 'activities-box') {
+		continue;
+	}
+
+	document.getElementById(fieldToValidate.field).addEventListener('keyup', e => {
+		validateField(e.target, fieldToValidate.validation);
+	});
+}
 
 // Add focus class to activities on focus
 let activities = document.querySelectorAll('#activities input[type="checkbox"]');
