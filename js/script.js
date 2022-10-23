@@ -2,13 +2,59 @@
 let total = 0;
 
 let fieldsToValidate = [
-	{'field': 'name', 'validation': 'not_empty'},
-	{'field': 'email', 'validation': 'email'},
-	{'field': 'activities-box', 'validation': 'activity_selected'},
-	{'field': 'cc-num', 'validation': 'credit_card_number'},
-	{'field': 'zip', 'validation': 'credit_card_zipcode'},
-	{'field': 'cvv', 'validation': 'credit_card_cvv'}
+	{'field': 'name', 'validation': ['not_empty']},
+	{'field': 'email', 'validation': ['not_empty', 'email']},
+	{'field': 'activities-box', 'validation': ['activity_selected']},
+	{'field': 'cc-num', 'validation': ['not_empty', 'credit_card_number']},
+	{'field': 'zip', 'validation': ['not_empty', 'credit_card_zipcode']},
+	{'field': 'cvv', 'validation': ['not_empty', 'credit_card_cvv']}
 ];
+
+// Add validation hints on load
+for (let fieldToValidate of fieldsToValidate) {
+	// Skip activities field
+	if(fieldToValidate.field === 'activities-box') {
+		continue;
+	}
+
+	let field = document.getElementById(fieldToValidate.field);
+	let fieldLabel = field.parentElement;
+	for (let validation of fieldToValidate.validation) {
+		let fieldLabelText = fieldLabel.textContent.match(/(\w+\s?\w+?\:)/i);
+		let hintText = "";
+		switch(validation) {
+			case "not_empty":								
+				hintText = 'cannot be blank';
+				break;
+
+			case "email":
+				hintText = 'must be formatted correctly';
+				break;
+
+			// case "activity_selected":
+			// 	isValid = activitySelected(field);
+			// 	break;
+
+			case "credit_card_number":
+				hintText = 'must be between 13 - 16 digits';
+				break;
+
+			case "credit_card_zipcode":
+				hintText = 'must be 5 digits';
+				break;
+
+			case "credit_card_cvv":
+				hintText = 'must be 3 digits';
+				break;
+		}
+
+		if(fieldLabelText && fieldLabelText.length > 0) {
+			fieldLabelText = fieldLabelText[1].replace(":", "");
+			let hint = `<span data-validation="${validation}" class="hint">${fieldLabelText} field ${hintText}</span>`;
+			fieldLabel.insertAdjacentHTML('beforeend', hint);
+		}
+	}
+}
 
 // Focus name input on load
 document.getElementById('name').focus();
@@ -36,10 +82,10 @@ function select_payment_option(selected_option) {
 	document.getElementById('payment').value = selected_option;
 }
 
-function isEmpty(field) {
+function isNotEmpty(field) {
 	let regex = /^\s+$/;
 
-	return (regex.test(field.value) || field.value == "");
+	return !(regex.test(field.value) || field.value == "");
 }
 
 function isEmail(field) {
@@ -76,34 +122,47 @@ function isValidCreditCardCvv(field) {
 let validateField = (field, validation) => {
 	let isValid = false;
 
-	switch(validation) {
-		case "not_empty":
-			isValid = !isEmpty(field);
-			break;
+	for (let i = 0; i < validation.length; i++) {
+		switch(validation[i]) {
+			case "not_empty":
+				isValid = isNotEmpty(field);
+				break;
 
-		case "email":
-			isValid = isEmail(field);
-			break;
+			case "email":
+				isValid = isEmail(field);
+				break;
 
-		case "activity_selected":
-			isValid = activitySelected(field);
-			break;
+			case "activity_selected":
+				isValid = activitySelected(field);
+				break;
 
-		case "credit_card_number":
-			isValid = isValidCreditCardNumber(field);
-			break;
+			case "credit_card_number":
+				isValid = isValidCreditCardNumber(field);
+				break;
 
-		case "credit_card_zipcode":
-			isValid = isValidCreditCardZipcode(field);
-			break;
+			case "credit_card_zipcode":
+				isValid = isValidCreditCardZipcode(field);
+				break;
 
-		case "credit_card_cvv":
-			isValid = isValidCreditCardCvv(field);
-			break;
+			case "credit_card_cvv":
+				isValid = isValidCreditCardCvv(field);
+				break;
+		}
+
+		toggleFieldValidationHint(field, validation[i], isValid);
 	}
 
 	toggleFieldValidClass(field, isValid);
 	return isValid;
+}
+
+function toggleFieldValidationHint(field, validation, valid) {
+	let parent = field.parentElement;
+	for (const child of parent.children) {
+		  if(child.classList.contains('hint') && (child.dataset.validation === validation || field.getAttribute('id') === 'activities-box')) {
+		  	child.style.display = valid ? "none" : "block";
+		  }
+		}
 }
 
 function toggleFieldValidClass(field, valid) {
@@ -111,11 +170,9 @@ function toggleFieldValidClass(field, valid) {
 	if(valid) {
 		parent.classList.remove("not-valid");
 		parent.classList.add("valid");
-		parent.lastElementChild.style.display = "none";
 	} else {
 		parent.classList.remove("valid");
 		parent.classList.add("not-valid");
-		parent.lastElementChild.style.display = "block";
 	}
 }
 
@@ -226,7 +283,7 @@ document.getElementById('activities').addEventListener('change', e => {
 		toggleConflictingActivities(checkbox);
 		updateTotal(checkbox);
 		let activitiesBox = document.getElementById('activities-box');
-		validateField(activitiesBox, 'activity_selected');
+		validateField(activitiesBox, ['activity_selected']);
 	}
 });
 
@@ -245,7 +302,7 @@ document.querySelector('form').addEventListener('submit', e => {
 		if(selectedPaymentMethod !== 'credit-card' && ['cc-num', 'zip', 'cvv'].includes(fieldToValidate.field)) {
 			continue;
 		}
-		
+
 		let field = document.getElementById(fieldToValidate.field); 
 		if(!validateField(field, fieldToValidate.validation)) {
 			isValidForm = false;
