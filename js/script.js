@@ -187,7 +187,6 @@ function toggleConflictingActivities(checkbox) {
 			}
 		}
 	}
-
 }
 
 // Toggle other job input visibility based on job role value
@@ -214,15 +213,9 @@ document.getElementById('design').addEventListener('change', () => {
 			color.removeAttribute('hidden');
 		}
 	}
-
-	document.getElementById('color').value = "";
-	document.getElementById('color').removeAttribute('disabled');	
-});
-
-// Toggle color dropdown availability based on design dropdown
-document.getElementById('color').addEventListener('change', () => {
-	// Hide place holder option in design dropdown after first change
 	document.querySelector('#color option:first-child').setAttribute('hidden', true);
+	document.getElementById('color').value = document.querySelectorAll('#color option[data-theme="' + selected_design + '"]')[0].value;	
+	document.getElementById('color').removeAttribute('disabled');	
 });
 
 // Update total based on user selection
