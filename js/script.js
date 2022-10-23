@@ -110,7 +110,6 @@ function toggleFieldValidClass(field, valid) {
 	}
 }
 
-
 function toggleActivitiesFocusClass(e) {
 	if(e.target.tagName === "INPUT" && e.target.getAttribute('type') === "checkbox") {
 		const checkbox = e.target;
@@ -122,6 +121,64 @@ function toggleActivitiesFocusClass(e) {
 			label.classList.remove("focus");
 		}
 	}
+}
+
+function updateTotal(checkbox) {
+	const cost = parseFloat(checkbox.dataset.cost);
+
+	if(checkbox.checked) {
+		total += cost;
+	} else {
+		total -= cost;
+	}
+
+	document.getElementById('activities-cost').innerHTML = `Total: $${total}`;
+}
+
+function separateDaytime(string) {
+	let dayTime = string.match(/^(\w+)\s(\d{1,2})(am|pm)-(\d{1,2})(am|pm)$/i);
+	let day = dayTime[1];
+	// Convert start time to 24 hour format
+	let startTime = dayTime[3].toLowerCase() === "pm" && dayTime[2] < 12 ? parseInt(dayTime[2]) + 12 : parseInt(dayTime[2]);
+	// Convert end time to 24 hour format
+	let endTime = dayTime[5].toLowerCase() === "pm" && dayTime[4] < 12 ? parseInt(dayTime[4]) + 12 : parseInt(dayTime[4]);
+
+	return {'day': day, 'start': startTime, 'end': endTime};
+}
+
+function toggleConflictingActivities(checkbox) {
+	// Check each of the activities for schedule conflict
+	let activities = document.querySelectorAll('#activities input[type="checkbox"]:not(:checked)');
+	for (let activity of activities) {
+		// Skip check if its the main conference or the currently checked/unchecked activity
+		if(["all", checkbox.name].includes(activity.name)) {
+			continue;
+		}
+
+		// Reset activity to initial state, it will be disabled later if it conflicts
+		activity.removeAttribute('disabled');
+		const label = activity.parentElement;
+		label.classList.remove("disabled");
+
+		// Extract schedule data from activity
+		let dayTime = separateDaytime(activity.dataset.dayAndTime);
+
+		// Check if this activity conflicts with any of the currently selected activities
+		let selectedActivities = document.querySelectorAll('#activities input[type="checkbox"]:checked');
+		for (let selectedActivity of selectedActivities) {
+			// Skip check if its the main conference
+			if(["all"].includes(selectedActivity.name)) {
+				continue;
+			}
+
+			let selectedDayTime = separateDaytime(selectedActivity.dataset.dayAndTime);
+			if(dayTime.day === selectedDayTime.day && (dayTime.start >= selectedDayTime.start && dayTime.start <= selectedDayTime.end)) {
+				activity.setAttribute('disabled', true);
+				label.classList.add("disabled");
+			}
+		}
+	}
+
 }
 
 // Toggle other job input visibility based on job role value
@@ -163,16 +220,9 @@ document.getElementById('color').addEventListener('change', () => {
 document.getElementById('activities').addEventListener('change', e => {
 	// Detect only for checkbox
 	if(e.target.tagName === "INPUT" && e.target.getAttribute('type') === "checkbox") {
-		const checkbox = e.target;
-		const cost = parseFloat(checkbox.dataset.cost);
-
-		if(checkbox.checked) {
-			total += cost;
-		} else {
-			total -= cost;
-		}
-
-		document.getElementById('activities-cost').innerHTML = `Total: $${total}`;
+		let checkbox = e.target;
+		toggleConflictingActivities(checkbox);
+		updateTotal(checkbox);
 	}
 });
 
@@ -217,4 +267,3 @@ for (let activity of activities) {
 		toggleActivitiesFocusClass(e);
 	});
 }
-
