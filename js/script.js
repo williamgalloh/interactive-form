@@ -43,7 +43,7 @@ function isEmpty(field) {
 }
 
 function isEmail(field) {
-	let regex = /[\w]+@[\w]+\.com/i;
+	let regex = /^[\w]+@[\w]+\.com$/i;
 
 	return regex.test(field.value);
 }
