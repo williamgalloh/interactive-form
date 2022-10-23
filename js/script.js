@@ -1,6 +1,7 @@
 // Initialize total variable to keep track of total cost
 let total = 0;
 
+// Initiallize a list of all fields that need validation
 let fieldsToValidate = [
 	{'field': 'name', 'validation': ['not_empty']},
 	{'field': 'email', 'validation': ['not_empty', 'email']},
@@ -10,7 +11,7 @@ let fieldsToValidate = [
 	{'field': 'cvv', 'validation': ['not_empty', 'credit_card_cvv']}
 ];
 
-// Add validation hints on load
+// Add hidden validation hints to necessary fields on load
 for (let fieldToValidate of fieldsToValidate) {
 	// Skip activities field
 	if(fieldToValidate.field === 'activities-box') {
@@ -66,9 +67,16 @@ document.getElementById('other-job-role').style.visibility = "hidden";
 document.getElementById('color').setAttribute('disabled', true);
 
 // Select credit card as payment option on load
-select_payment_option('credit-card');
+selectPaymentOption('credit-card');
 
-function select_payment_option(selected_option) {
+/**
+ * selectPaymentOption
+ * 
+ * Hides/shows payment method fields depending on option selected
+ *
+ * @param {string} selected_option - option value of selected payment method 
+ */
+function selectPaymentOption(selected_option) {
 	const payment_options = document.querySelectorAll('.payment-option');
 
 	for (let payment_option of payment_options) {
@@ -82,70 +90,54 @@ function select_payment_option(selected_option) {
 	document.getElementById('payment').value = selected_option;
 }
 
-function isNotEmpty(field) {
-	let regex = /^\s+$/;
-
-	return !(regex.test(field.value) || field.value == "");
-}
-
-function isEmail(field) {
-	let regex = /^[\w]+@[\w]+\.com$/i;
-
-	return regex.test(field.value);
-}
-
-function activitySelected(field) {
-	// let field = document.getElementById('activities-box');
-	let selected_activities = document.querySelectorAll('#activities input[type="checkbox"]:checked');
-
-	return selected_activities.length > 0;
-}
-
-function isValidCreditCardNumber(field) {
-		let card_number_regex = /^[0-9]{13,16}$/;
-
-		return card_number_regex.test(field.value);
-}
-
-function isValidCreditCardZipcode(field) {
-		let zipcode_regex = /^[0-9]{5}$/;
-
-		return zipcode_regex.test(field.value);
-}
-
-function isValidCreditCardCvv(field) {
-		let cvv_regex = /^[0-9]{3}$/;
-
-		return cvv_regex.test(field.value);
-}
-
+/**
+ * validateField
+ * 
+ * Checks if a field is valid or not based on supplied validation rules
+ *
+ * @param {DOMElement} field - field element to be validated
+ * @param {array} validation - validation rules to check
+ * @returns {boolean} returns weather the field passed all the validation rules or not
+ */
 let validateField = (field, validation) => {
 	let isValid = false;
 
 	for (let i = 0; i < validation.length; i++) {
 		switch(validation[i]) {
 			case "not_empty":
-				isValid = isNotEmpty(field);
+				var regex = /^\s+$/;
+
+				isValid = !(regex.test(field.value) || field.value == "");
 				break;
 
 			case "email":
-				isValid = isEmail(field);
+				var regex = /^[\w]+@[\w]+\.com$/i;
+
+				isValid = regex.test(field.value);
 				break;
 
 			case "activity_selected":
-				isValid = activitySelected(field);
+				var selected_activities = document.querySelectorAll('#activities input[type="checkbox"]:checked');
+
+				isValid = selected_activities.length > 0;
 				break;
 
 			case "credit_card_number":
-				isValid = isValidCreditCardNumber(field);
+				var card_number_regex = /^[0-9]{13,16}$/;
+
+				isValid = card_number_regex.test(field.value);
 				break;
 
 			case "credit_card_zipcode":
-				isValid = isValidCreditCardZipcode(field);
+				var zipcode_regex = /^[0-9]{5}$/;
+
+				isValid = zipcode_regex.test(field.value);
 				break;
 
 			case "credit_card_cvv":
-				isValid = isValidCreditCardCvv(field);
+				var cvv_regex = /^[0-9]{3}$/;
+
+				isValid = cvv_regex.test(field.value);
 				break;
 		}
 
@@ -156,6 +148,15 @@ let validateField = (field, validation) => {
 	return isValid;
 }
 
+/**
+ * toggleFieldValidationHint
+ *
+ * Show/hide validation hints on fields
+ *
+ * @param {DOMElement} field - field element being validated
+ * @param {string} validation - validation rule being validated
+ * @param {boolean} valid - wether the specific validation rule was valid or not
+ */
 function toggleFieldValidationHint(field, validation, valid) {
 	let parent = field.parentElement;
 	for (const child of parent.children) {
@@ -165,6 +166,14 @@ function toggleFieldValidationHint(field, validation, valid) {
 		}
 }
 
+/**
+ * toggleFieldValidClass
+ * 
+ * Add/remove valid/not-valid class on fields
+ *
+ * @param {DOMElement} field - field element to be validated
+ * @param {boolean} valid - wether the specific validation rule was valid or not
+ */
 function toggleFieldValidClass(field, valid) {
 	let parent = field.parentElement;
 	if(valid) {
@@ -176,6 +185,13 @@ function toggleFieldValidClass(field, valid) {
 	}
 }
 
+/**
+ * toggleActivitiesFocusClass
+ * 
+ * Enhance visibility of activity element when browser is focused on its input field
+ *
+ * @param {event} e - event object passed by listener
+ */
 function toggleActivitiesFocusClass(e) {
 	if(e.target.tagName === "INPUT" && e.target.getAttribute('type') === "checkbox") {
 		const checkbox = e.target;
@@ -189,18 +205,14 @@ function toggleActivitiesFocusClass(e) {
 	}
 }
 
-function updateTotal(checkbox) {
-	const cost = parseFloat(checkbox.dataset.cost);
-
-	if(checkbox.checked) {
-		total += cost;
-	} else {
-		total -= cost;
-	}
-
-	document.getElementById('activities-cost').innerHTML = `Total: $${total}`;
-}
-
+/**
+ * separateDaytime
+ * 
+ * Separate an activity's schedule string into usable day/time variables
+ *
+ * @param {string} string - string representing an activity's schedule ('Wednesday 1pm-4pm')
+ * @returns {Object} object containing the usable parts of the schedule
+ */
 function separateDaytime(string) {
 	let dayTime = string.match(/^(\w+)\s(\d{1,2})(am|pm)-(\d{1,2})(am|pm)$/i);
 	let day = dayTime[1];
@@ -212,6 +224,13 @@ function separateDaytime(string) {
 	return {'day': day, 'start': startTime, 'end': endTime};
 }
 
+/**
+ * toggleConflictingActivities
+ * 
+ * Enable/disable activities based on conflicting schedules with other activities
+ *
+ * @param {DOMElement} checkbox - checkbox element of selected activity
+ */
 function toggleConflictingActivities(checkbox) {
 	// Check each of the activities for schedule conflict
 	let activities = document.querySelectorAll('#activities input[type="checkbox"]:not(:checked)');
@@ -275,13 +294,23 @@ document.getElementById('design').addEventListener('change', () => {
 	document.getElementById('color').removeAttribute('disabled');	
 });
 
-// Update total based on user selection
+// Update total based on user selection, validate activity fields in real-time, and toggle conflicting activities
 document.getElementById('activities').addEventListener('change', e => {
 	// Detect only for checkbox
 	if(e.target.tagName === "INPUT" && e.target.getAttribute('type') === "checkbox") {
 		let checkbox = e.target;
+
+		const cost = parseFloat(checkbox.dataset.cost);
+
+		if(checkbox.checked) {
+			total += cost;
+		} else {
+			total -= cost;
+		}
+
+		document.getElementById('activities-cost').innerHTML = `Total: $${total}`;
+
 		toggleConflictingActivities(checkbox);
-		updateTotal(checkbox);
 		let activitiesBox = document.getElementById('activities-box');
 		validateField(activitiesBox, ['activity_selected']);
 	}
@@ -289,7 +318,7 @@ document.getElementById('activities').addEventListener('change', e => {
 
 // Handle payment option change event
 document.getElementById('payment').addEventListener('change', e => {
-	select_payment_option(e.target.value);
+	selectPaymentOption(e.target.value);
 });
 
 // Handle form submission event
@@ -309,12 +338,13 @@ document.querySelector('form').addEventListener('submit', e => {
 		}
 	}
 
+	// Instead of preventing form submission immidiately, we wait until all fields are validated to show user all errors.
 	if(!isValidForm) {
 		e.preventDefault();
 	}
 });
 
-// Validate form fields in real-time
+// Add event listeners to validate form fields in real-time
 for (let fieldToValidate of fieldsToValidate) {
 	// Skip activities as they are already being validated in real time on another event listener
 	if(fieldToValidate.field == 'activities-box') {
@@ -326,7 +356,10 @@ for (let fieldToValidate of fieldsToValidate) {
 	});
 }
 
-// Add focus class to activities on focus
+// Add focus class to activities on focus.
+// CAN BE IMPROVED: 
+// In future can target parent element and use 'useCapture' option in 'addEventListener' 
+// or use 'focusin' event instead of 'focus' as the event to listen for
 let activities = document.querySelectorAll('#activities input[type="checkbox"]');
 for (let activity of activities) {
 	activity.addEventListener('focus', e => {
