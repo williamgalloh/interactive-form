@@ -240,6 +240,12 @@ document.querySelector('form').addEventListener('submit', e => {
 	let isValidForm = true;
 
 	for(let fieldToValidate of fieldsToValidate) {
+		// Validate credit card only if its the payment method selected
+		let selectedPaymentMethod = document.getElementById('payment').value;
+		if(selectedPaymentMethod !== 'credit-card' && ['cc-num', 'zip', 'cvv'].includes(fieldToValidate.field)) {
+			continue;
+		}
+		
 		let field = document.getElementById(fieldToValidate.field); 
 		if(!validateField(field, fieldToValidate.validation)) {
 			isValidForm = false;
